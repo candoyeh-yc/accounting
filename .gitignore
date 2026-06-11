@@ -1,0 +1,5 @@
+# 考古題 PDF（版權，不公開）
+*.pdf
+# macOS
+.DS_Store
+**/.DS_Store
