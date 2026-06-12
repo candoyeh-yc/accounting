@@ -155,8 +155,12 @@ body{
   #main{margin-left:0; padding:70px 16px 80px}
   #content{padding:26px 20px 40px}
 }
-.toc-top{text-align:right;margin-bottom:-10px}
-.toc-top a{font-size:12px;color:var(--muted);border:none}
+#totop{position:fixed;right:26px;bottom:26px;z-index:50;width:48px;height:48px;border-radius:50%;
+  border:none;background:var(--accent);color:#fff;font-size:19px;cursor:pointer;opacity:0;visibility:hidden;
+  transition:.2s;box-shadow:0 4px 16px rgba(37,99,235,.45)}
+#totop.show{opacity:.92;visibility:visible}
+#totop:hover{opacity:1;transform:translateY(-2px)}
+@media(max-width:860px){#totop{right:16px;bottom:16px;width:44px;height:44px;font-size:17px}}
 </style>
 </head>
 <body>
@@ -168,6 +172,7 @@ body{
   __NAV__
 </nav>
 <div id="main"><div id="content"></div></div>
+<button id="totop" aria-label="回頂端" title="回頂端">▲</button>
 
 <script>
 var DOCS = __DOCS__;
@@ -180,7 +185,7 @@ var ids={}; links.forEach(function(a){ids[a.dataset.id]=true});
 function render(id,push){
   var b=DOCS[id]; if(!b)return;
   var md=b64utf8(b);
-  contentEl.innerHTML='<div class="toc-top"><a href="#top">▲ 回頂端</a></div>'+
+  contentEl.innerHTML=
     (window.marked?(marked.parse?marked.parse(md):marked(md)):('<pre>'+md.replace(/</g,'&lt;')+'</pre>'));
   // 內部 .md 連結 → 切換頁面
   contentEl.querySelectorAll('a').forEach(function(a){
@@ -218,6 +223,12 @@ var sb=document.getElementById('sidebar'),ov=document.getElementById('overlay');
 function closeSide(){sb.classList.remove('open');ov.classList.remove('show')}
 document.getElementById('menu-btn').onclick=function(){sb.classList.toggle('open');ov.classList.toggle('show')};
 ov.onclick=closeSide;
+
+// 浮動回頂端按鈕
+var totop=document.getElementById('totop');
+function onScroll(){ (window.scrollY>300) ? totop.classList.add('show') : totop.classList.remove('show'); }
+window.addEventListener('scroll',onScroll,{passive:true});
+totop.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'})});
 
 // 起始頁：hash → localStorage → 第一頁
 var start=(location.hash||'').replace('#','');
