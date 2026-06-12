@@ -228,9 +228,13 @@ function render(id,push){
   contentEl.querySelectorAll('a').forEach(function(a){
     var href=a.getAttribute('href')||'';
     var m=href.replace(/^.*\//,'').replace(/#.*$/,'');
-    if(m.endsWith('.md')){
+    try{m=decodeURIComponent(m);}catch(e){}
+    if(m.slice(-3)==='.md'){
       var tid=m.slice(0,-3);
-      if(ids[tid]){a.addEventListener('click',function(e){e.preventDefault();go(tid);});}
+      if(ids[tid]){
+        a.setAttribute('href','#'+tid);
+        a.addEventListener('click',function(e){e.preventDefault();go(tid);});
+      }
     }
   });
   links.forEach(function(a){a.classList.toggle('active',a.dataset.id===id)});
@@ -269,10 +273,11 @@ totop.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smoot
 
 // 起始頁：hash → localStorage → 第一頁
 var start=(location.hash||'').replace('#','');
+try{start=decodeURIComponent(start);}catch(e){}
 if(!ids[start]){try{start=localStorage.getItem('exam_last')}catch(e){}}
 if(!ids[start])start='00_讀書計劃總表';
 render(start,false);
-window.addEventListener('hashchange',function(){var h=location.hash.replace('#','');if(ids[h])render(h,false)});
+window.addEventListener('hashchange',function(){var h=location.hash.replace('#','');try{h=decodeURIComponent(h);}catch(e){}if(ids[h])render(h,false)});
 </script>
 </body>
 </html>
