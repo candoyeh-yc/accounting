@@ -11,6 +11,19 @@ import os, base64, json, re
 ROOT = os.path.dirname(os.path.abspath(__file__))
 MARKED_PATH = "/tmp/marked.min.js"  # 內嵌；找不到則用 CDN
 
+# 導覽列短標題覆寫（不設則自動取 H1「｜」後段）。改這裡即可改側邊欄標題。
+NAV_OVERRIDE = {
+    "00_審計學_考點地圖": "考點頻率地圖",
+    "00a_審計學_查核流程全景圖": "查核流程全景圖",
+    "00b_審計學_核心速覽_先讀這張": "核心速覽卡",
+    "00c_審計學_記憶口訣卡": "記憶口訣卡",
+    "03_三法_深掘_證券交易法": "證券交易法★★★",
+    "04_三法_深掘_商業會計法": "商業會計法★★★",
+    "10_稅務_現行數字速查表": "現行數字速查表",
+    "12_稅務_深掘_所得稅與房地合一": "所得稅法・房地合一・AMT・CFC★★★",
+    "14_稅務_深掘_營業稅與稽徵程序": "營業稅・稅捐稽徵法・納稅者權利保護法 ★★★",
+}
+
 # 科目分組與顯示順序（'' = 根目錄）
 GROUPS = [
     ("", "📋 讀書計劃", ""),
@@ -43,7 +56,7 @@ def collect():
                 content = fh.read()
             doc_id = f[:-3]  # 去 .md
             h1 = first_h1(content) or doc_id
-            nav = h1.split("｜")[-1].strip()
+            nav = NAV_OVERRIDE.get(doc_id, h1.split("｜")[-1].strip())
             docs[doc_id] = base64.b64encode(content.encode("utf-8")).decode("ascii")
             items.append({"id": doc_id, "nav": nav, "title": h1})
         if items:
