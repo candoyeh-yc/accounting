@@ -9,7 +9,7 @@
 import os, base64, json, re
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-MARKED_PATH = "/tmp/marked.min.js"  # 內嵌；找不到則用 CDN
+MARKED_PATH = os.path.join(ROOT, "marked.min.js")  # 內嵌（repo 內，離線可用）；找不到才 fallback CDN
 
 # 導覽列短標題覆寫（不設則自動取 H1「｜」後段）。改這裡即可改側邊欄標題。
 NAV_OVERRIDE = {
