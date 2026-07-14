@@ -39,6 +39,10 @@ def parse_sanfa():
         mnemo = cells[3] if len(cells) > 3 and cells[3] else ""
         if section == "數字陷阱":
             num, what, law = cells[0], cells[1], cells[2]
+            # 去重：與法條卡重複的陷阱列不出卡（法條卡背面已含該數字）；只留無對應法條列的
+            KEEP = ("提撥 10%", "1 千萬且 1%", "3 個月")
+            if not any(num.strip("*").strip().startswith(k) for k in KEEP):
+                continue
             plain = re.sub(r"\*\*", "", what)
             masked = re.sub(r"[0-9０-９][0-9０-９,，\.]*", "？", plain)
             back = md_inline(num)
