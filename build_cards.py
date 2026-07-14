@@ -72,7 +72,7 @@ TEMPLATE = r"""<!DOCTYPE html>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
 font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif}
-#app{max-width:560px;margin:0 auto;padding:14px 16px 40px;min-height:100vh;display:flex;flex-direction:column}
+#app{max-width:560px;margin:0 auto;padding:14px 16px 40px}
 header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 header h1{font-size:17px;margin:0;font-weight:800}
 header a{color:var(--muted);text-decoration:none;font-size:13px}
@@ -83,16 +83,16 @@ padding:5px 12px;font-size:13px;cursor:pointer}
 #bar{height:6px;background:#1e293b;border-radius:3px;overflow:hidden;margin-bottom:6px}
 #bar>div{height:100%;background:var(--accent);width:0%;transition:.3s}
 #stats{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:12px}
-#card{flex:1;min-height:320px;background:var(--card);border-radius:18px;padding:26px 22px;
+#card{min-height:200px;background:var(--card);border-radius:18px;padding:44px 20px 34px;
 display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;
 cursor:pointer;box-shadow:0 8px 30px rgba(0,0,0,.35);position:relative;user-select:none}
-#card .deck-badge{position:absolute;top:14px;left:16px;font-size:12px;color:var(--muted);
-border:1px solid #334155;border-radius:999px;padding:2px 10px}
-#card .hint{position:absolute;bottom:12px;font-size:12px;color:#475569}
-#front-text{font-size:24px;font-weight:800;line-height:1.5}
+#card .deck-badge{position:absolute;top:12px;left:14px;font-size:11px;color:var(--muted);
+border:1px solid #334155;border-radius:999px;padding:2px 9px}
+#card .hint{position:absolute;bottom:10px;font-size:11px;color:#475569}
+#front-text{font-size:22px;font-weight:800;line-height:1.5}
 #back{display:none;width:100%}
-#back .law{font-size:22px;font-weight:800;color:var(--gold);margin-bottom:14px}
-#back .detail{font-size:16.5px;line-height:1.9;text-align:left;color:var(--text)}
+#back .law{font-size:20px;font-weight:800;color:var(--gold);margin-bottom:10px;text-align:center}
+#back .detail{font-size:15.5px;line-height:1.8;text-align:left;color:var(--text)}
 #back .detail b{color:#f87171;font-weight:800}
 #actions{display:flex;gap:10px;margin-top:14px}
 #actions button{flex:1;padding:15px 0;border:none;border-radius:14px;font-size:16px;font-weight:800;
@@ -105,7 +105,7 @@ cursor:pointer;color:#fff}
 border-radius:12px;padding:12px 22px;font-size:15px;font-weight:700;cursor:pointer}
 #reset{background:none;border:1px solid #334155;color:var(--muted);font-size:12px;padding:6px 12px}
 footer{margin-top:14px;text-align:center}
-@media(min-width:600px){#front-text{font-size:28px}}
+@media(min-width:600px){#front-text{font-size:24px}#card{min-height:230px}}
 </style>
 </head>
 <body>
