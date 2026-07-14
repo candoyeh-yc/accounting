@@ -182,7 +182,9 @@ body{
 <button id="menu-btn">☰</button>
 <div id="overlay"></div>
 <nav id="sidebar">
-  <div class="brand">會計師考試<small>重點整理 · 點左側切換</small></div>
+  <div class="brand">會計師考試<small>重點整理 · 點左側切換</small>
+    <a href="cards.html" style="display:block;margin-top:10px;padding:8px 12px;background:rgba(37,99,235,.25);border:1px solid rgba(37,99,235,.5);border-radius:9px;color:#fff;text-decoration:none;font-size:13.5px;font-weight:700;text-align:center">🃏 三法法條字卡</a>
+  </div>
   <input id="search" placeholder="🔎 篩選頁面…" autocomplete="off">
   __NAV__
 </nav>
@@ -271,3 +273,9 @@ with open(out, "w", encoding="utf-8") as fh:
     fh.write(HTML)
 print("OK  ->", out)
 print("頁數:", sum(len(g["items"]) for g in groups), " 大小:", round(len(HTML)/1024), "KB")
+
+# 連動產生法條字卡（SSOT＝三法/10_三法_法條速記表.md）
+cards_script = os.path.join(ROOT, "build_cards.py")
+if os.path.exists(cards_script):
+    import subprocess, sys
+    subprocess.run([sys.executable, cards_script], check=False)
