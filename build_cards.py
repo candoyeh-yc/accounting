@@ -182,6 +182,11 @@ def parse_audit_lists():
             flush()
             t = re.sub(r"^[①-⑳]\s*", "", m.group(1)).strip()
             t = t.replace("★必背", "").strip()
+            # 去重：與 00c 口訣卡重複的清單不出卡（口訣卡版含碼與陷阱，較完整）
+            DUP = ("風險評估程序之方法", "取得查核證據七方法", "存貨實體盤點", "會計估計四對策")
+            if any(d in t for d in DUP):
+                title, body = None, []
+                continue
             lm = re.search(r"（(\d[\d/]*)）", t)
             law_no = lm.group(1) if lm else ""
             title, law, body = t, law_no, []
