@@ -38,10 +38,11 @@ def parse():
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
         if len(cells) < 3 or set(cells[0]) <= {"-", " ", ":"}:
             continue
-        if cells[0] in ("數字", "條"):  # 表頭
+        if cells[0] in ("數字", "條") or cells[0].startswith("條件"):  # 表頭
             continue
         if section == "數字陷阱":
             num, what, law = cells[0], cells[1], cells[2]
+            mnemo = cells[3] if len(cells) > 3 and cells[3] else ""
             # 正面遮數字（避免題面漏答案）：所有阿拉伯數字改成「？」
             plain_what = re.sub(r"\*\*", "", what)
             masked = re.sub(r"[0-9０-９][0-9０-９,，\.]*", "？", plain_what)
@@ -53,14 +54,17 @@ def parse():
                 "front": md_inline(masked),
                 "law": md_inline(law),
                 "back": back,
+                "mnemo": md_inline(mnemo) if mnemo else "",
             })
         else:
             cond, rule, detail = cells[0], cells[1], cells[2]
+            mnemo = cells[3] if len(cells) > 3 and cells[3] else ""
             cards.append({
                 "deck": section,
                 "front": md_inline(re.sub(r"\*\*", "", rule)),
                 "law": md_inline(cond),
                 "back": md_inline(detail),
+                "mnemo": md_inline(mnemo) if mnemo else "",
             })
     for i, c in enumerate(cards):
         c["id"] = f'{c["deck"]}|{re.sub(r"<[^>]+>", "", c["front"])[:30]}'
@@ -99,7 +103,10 @@ border:1px solid #334155;border-radius:999px;padding:2px 9px}
 #front-text.small{font-size:15px;color:var(--muted);font-weight:700;margin-bottom:14px;
 padding-bottom:12px;border-bottom:1px dashed #334155;width:100%}
 #back{display:none;width:100%}
-#back .law{font-size:20px;font-weight:800;color:var(--gold);margin-bottom:10px;text-align:center}
+#back .law{font-size:20px;font-weight:800;color:var(--gold);margin-bottom:6px;text-align:center}
+#back .mnemo{font-size:13.5px;color:#e9c46a;background:rgba(251,191,36,.08);border:1px dashed rgba(251,191,36,.35);
+border-radius:8px;padding:6px 10px;margin:0 auto 12px;max-width:92%;text-align:center}
+#back .mnemo:empty{display:none}
 #back .detail{font-size:15.5px;line-height:1.8;text-align:left;color:var(--text)}
 #back .detail b{color:#f87171;font-weight:800}
 #actions{display:flex;gap:10px;margin-top:14px}
@@ -126,7 +133,7 @@ footer{margin-top:14px;text-align:center}
 <div id="card">
   <span class="deck-badge" id="badge"></span>
   <div id="front-text"></div>
-  <div id="back"><div class="law" id="back-law"></div><div class="detail" id="back-detail"></div></div>
+  <div id="back"><div class="law" id="back-law"></div><div class="mnemo" id="back-mnemo"></div><div class="detail" id="back-detail"></div></div>
   <span class="hint" id="hint">點卡片翻面（空白鍵）</span>
 </div>
 <div id="actions" class="hidden">
@@ -178,6 +185,7 @@ function show(){
   $("front-text").classList.remove("small");
   $("back").style.display = "none";
   $("back-law").innerHTML = c.law;
+  $("back-mnemo").innerHTML = "mnemo" in c && c.mnemo ? "💡 " + c.mnemo : "";
   $("back-detail").innerHTML = c.back;
   $("actions").classList.add("hidden");
   $("hint").style.display = "block";
