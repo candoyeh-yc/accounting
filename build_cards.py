@@ -43,12 +43,16 @@ def parse():
         if section == "數字陷阱":
             num, what, law = cells[0], cells[1], cells[2]
             # 正面遮數字（避免題面漏答案）：所有阿拉伯數字改成「？」
-            masked = re.sub(r"[0-9０-９][0-9０-９,，\.]*", "？", re.sub(r"\*\*", "", what))
+            plain_what = re.sub(r"\*\*", "", what)
+            masked = re.sub(r"[0-9０-９][0-9０-９,，\.]*", "？", plain_what)
+            back = md_inline(num)
+            if masked != plain_what:  # 有遮到數字才附完整句（否則與置頂題目重複）
+                back += "<br><span style='color:#94a3b8;font-size:14px'>" + md_inline(plain_what) + "</span>"
             cards.append({
                 "deck": section,
                 "front": md_inline(masked),
                 "law": md_inline(law),
-                "back": md_inline(num) + "<br><span style='color:#94a3b8;font-size:14px'>" + md_inline(re.sub(r"\*\*", "", what)) + "</span>",
+                "back": back,
             })
         else:
             cond, rule, detail = cells[0], cells[1], cells[2]
