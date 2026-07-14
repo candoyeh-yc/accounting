@@ -5,7 +5,7 @@
 來源（SSOT，改 md 重跑即同步）：
   三法：三法/10_三法_法條速記表.md（含助記欄）
   稅務：稅務法規/10_稅務_現行數字速查表.md（自動克漏字：粗體數字遮成？）
-  審計：審計學/00c_審計學_記憶口訣卡.md（清單默寫：口訣名→碼＋內容）
+  審計：審計學/00c_審計學_記憶口訣卡.md（口訣默寫）＋00d_審計學_程序列舉彙整.md（列舉程序默寫）
 """
 import os, re, json, html
 
@@ -151,6 +151,42 @@ def parse_audit():
             t = re.sub(r"^[④②③①⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯]-?\d*\s*", "", t).strip()
             section_title, body = t, []
         elif section_title is not None:
+            body.append(line)
+    flush()
+    return cards
+
+# ---------- 審計（列舉程序 00d）----------
+def parse_audit_lists():
+    text = open(os.path.join(ROOT, "審計學", "00d_審計學_程序列舉彙整.md"), encoding="utf-8").read()
+    cards = []
+    title, law, body = None, "", []
+    def flush():
+        if not title or not body: return
+        detail = []
+        for b in body:
+            bs = b.strip()
+            if not bs or bs == "---": continue
+            bs = re.sub(r"^- ", "• ", bs)
+            bs = re.sub(r"^> ", "⚠ ", bs)
+            detail.append(md_inline(bs))
+        cards.append(dict(deck="審計", sub="列舉", front="列舉：" + md_inline(title) + "？",
+                          law=("審計準則 " + law) if law else "列舉程序",
+                          back="<br>".join(detail), mnemo=""))
+    for line in text.splitlines():
+        st = line.strip()
+        if st.startswith("## "):
+            flush(); title, body = None, []
+            continue
+        m = re.match(r"\*\*([①-⑳]?\s*.+?)\*\*\s*(→.*)$", st)
+        if m and st.startswith("**"):  # 必須帶 → 連結才是條目標題（避免粗體內容行被誤判）
+            flush()
+            t = re.sub(r"^[①-⑳]\s*", "", m.group(1)).strip()
+            t = t.replace("★必背", "").strip()
+            lm = re.search(r"（(\d[\d/]*)）", t)
+            law_no = lm.group(1) if lm else ""
+            title, law, body = t, law_no, []
+            continue
+        if title is not None:
             body.append(line)
     flush()
     return cards
@@ -324,7 +360,7 @@ renderDecks(); startSession();
 </body>
 </html>"""
 
-cards = parse_sanfa() + parse_tax() + parse_audit()
+cards = parse_sanfa() + parse_tax() + parse_audit() + parse_audit_lists()
 for c in cards:
     c["id"] = f'{c["deck"]}|{re.sub(r"<[^>]+>", "", c["front"])[:30]}'
 html_out = TEMPLATE.replace("__CARDS__", json.dumps(cards, ensure_ascii=False))
