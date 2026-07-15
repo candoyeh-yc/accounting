@@ -92,8 +92,12 @@ def parse_tax():
             answer = " ｜ ".join(cells[1:]).strip()
             if not (has_digit(answer) or "**" in answer): continue
             if len(re.sub(r"\*\*", "", cells[0])) > 40: continue
-            front = f"<span class='ctx'>{md_inline(ctx)}</span>{md_inline(re.sub(r'\*\*','',cells[0]))} ＝ ？"
-            cards.append(dict(deck="稅務", sub=ctx[:6], front=front, law=md_inline(ctx),
+            subj = re.sub(r"\*\*", "", cells[0])
+            subj = re.sub(r"\s*[★☆⭐]\s*", "", subj).strip()
+            if "納稅義務人" in ctx:
+                subj = subj + " 的納稅義務人"
+            front = f"<span class='ctx'>{md_inline(ctx)}</span>{md_inline(subj)} ＝ ？"
+            cards.append(dict(deck="稅務", sub=ctx[:6], front=front, law="",
                               back=md_inline(re.sub(r"\*\*", "", answer)), mnemo=""))
             continue
         # 條列（克漏字：粗體含數字 → 遮）
@@ -111,7 +115,7 @@ def parse_tax():
             front = f"<span class='ctx'>{md_inline(ctx)}</span>{md_inline(masked)}"
             back = "、".join(f"<b>{html.escape(b)}</b>" for b in num_bolds)
             back += "<br><span style='color:#94a3b8;font-size:14px'>" + md_inline(plain) + "</span>"
-            cards.append(dict(deck="稅務", sub=ctx[:6], front=front, law=md_inline(ctx),
+            cards.append(dict(deck="稅務", sub=ctx[:6], front=front, law="",
                               back=back, mnemo=""))
     return cards
 
