@@ -94,12 +94,20 @@ def parse_tax():
             if len(re.sub(r"\*\*", "", cells[0])) > 40: continue
             subj = re.sub(r"\*\*", "", cells[0])
             subj = re.sub(r"\s*[★☆⭐]\s*", "", subj).strip()
+            plain_ans = re.sub(r"\*\*", "", answer)
+            is_rate = bool(re.match(r"^\s*[0-9０-９][0-9０-９,\.]*\s*[%‰]", plain_ans))
             if "納稅義務人" in ctx:
                 subj = subj + " 的納稅義務人"
             elif "扣繳" in ctx:
                 subj = subj + " 的扣繳義務人"
             elif "申報期限" in ctx:
                 subj = subj + " 的申報期限"
+            elif ctx == "遺產及贈與稅":            # 門檻減半對照表：兩欄稅率
+                subj = "課稅淨額 " + subj + " 的遺產／贈與稅率"
+            elif is_rate and "率" not in subj:      # 級距/稅率表 → 問稅率
+                subj = subj + " 的稅率"
+            elif ("萬" in plain_ans or "元" in plain_ans) and not re.search(r"[額費期限]", subj):
+                subj = subj + " 的扣除額"
             front = f"<span class='ctx'>{md_inline(ctx)}</span>{md_inline(subj)} ＝ ？"
             cards.append(dict(deck="稅務", sub=ctx[:6], front=front, law="",
                               back=md_inline(re.sub(r"\*\*", "", answer)), mnemo=""))
