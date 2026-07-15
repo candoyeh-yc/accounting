@@ -96,6 +96,10 @@ def parse_tax():
             subj = re.sub(r"\s*[★☆⭐]\s*", "", subj).strip()
             if "納稅義務人" in ctx:
                 subj = subj + " 的納稅義務人"
+            elif "扣繳" in ctx:
+                subj = subj + " 的扣繳義務人"
+            elif "申報期限" in ctx:
+                subj = subj + " 的申報期限"
             front = f"<span class='ctx'>{md_inline(ctx)}</span>{md_inline(subj)} ＝ ？"
             cards.append(dict(deck="稅務", sub=ctx[:6], front=front, law="",
                               back=md_inline(re.sub(r"\*\*", "", answer)), mnemo=""))
