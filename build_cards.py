@@ -219,6 +219,67 @@ def parse_audit_lists():
     flush()
     return cards
 
+# ---------- 申論卡（骨架／爭點／易混，手寫來源 30_*_申論卡.md）----------
+ESSAY_TYPE_MODE = {"骨架": "申論", "爭點": "申論", "易混": "通用", "列舉": "申論"}
+def parse_essay(rel_path, deck):
+    path = os.path.join(ROOT, rel_path)
+    if not os.path.exists(path):
+        return []
+    text = open(path, encoding="utf-8").read()
+    cards, ctype, front, law, body = [], None, None, "", []
+    def flush():
+        if not ctype or not front:
+            return
+        back = "<br>".join("• " + md_inline(b) for b in body) if body else ""
+        disp = front
+        if ctype in ("骨架",) and not disp.endswith(("？", "?")):
+            disp += "？"
+        cards.append(dict(deck=deck, sub=ctype, ctype=ctype,
+                          mode=ESSAY_TYPE_MODE.get(ctype, "申論"),
+                          front=md_inline(disp), law=md_inline(law), back=back, mnemo=""))
+    for line in text.splitlines():
+        s = line.strip()
+        if s.startswith("## "):
+            flush(); front, body = None, []
+            name = re.sub(r"[（(].*$", "", s.lstrip("#").strip()).strip()
+            ctype = name if name in ESSAY_TYPE_MODE else None
+            continue
+        if ctype is None or s.startswith(">"):
+            continue
+        if s.startswith("### "):
+            flush()
+            head = s[4:].strip()
+            if "｜" in head:
+                front, law = head.split("｜", 1)
+                law = re.sub(r"^(法條|考點|準則)[:：]?\s*", "", law).strip()
+            else:
+                front, law = head, ""
+            front, body = front.strip(), []
+            continue
+        if s.startswith("- "):
+            body.append(s[2:].strip())
+    flush()
+    return cards
+
+# ---------- 卡型/模式分類（舊卡補標 ctype、mode 供篩選）----------
+def classify(c):
+    if c.get("ctype"):   # 申論卡已自帶
+        c.setdefault("mode", "申論"); return c
+    deck, sub = c["deck"], c.get("sub", "")
+    if deck == "稅務":
+        c["ctype"], c["mode"] = "數字", "選擇"
+    elif deck == "三法":
+        if sub == "數字陷阱":
+            c["ctype"], c["mode"] = "數字", "選擇"
+        else:
+            c["ctype"], c["mode"] = "法條", "通用"
+    elif deck == "審計":
+        c["ctype"] = "列舉" if sub == "列舉" else "口訣"
+        c["mode"] = "申論"
+    else:
+        c["ctype"], c["mode"] = sub or "其他", "通用"
+    return c
+
 # ---------- 模板 ----------
 TEMPLATE = r"""<!DOCTYPE html>
 <html lang="zh-Hant">
@@ -236,7 +297,9 @@ font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",system-ui,sans-ser
 header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 header h1{font-size:17px;margin:0;font-weight:800}
 header a{color:var(--muted);text-decoration:none;font-size:13px}
-#decks{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+#decks{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+#modes{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.chip.mode.on{background:var(--gold);border-color:var(--gold);color:#0f172a}
 .chip{border:1px solid #334155;background:none;color:var(--muted);border-radius:999px;
 padding:5px 12px;font-size:13px;cursor:pointer}
 .chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
@@ -279,6 +342,7 @@ footer{margin-top:14px;text-align:center}
 <div id="app">
 <header><h1>🃏 考試記憶字卡</h1><a href="index.html">← 回教材</a></header>
 <div id="decks"></div>
+<div id="modes"></div>
 <div id="bar"><div id="barfill"></div></div>
 <div id="stats"><span id="s-left"></span><span id="s-master"></span></div>
 
@@ -304,21 +368,39 @@ const CARDS = __CARDS__;
 const LS_KEY = "law_cards_box_v1";
 let box = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
 let deckFilter = localStorage.getItem("law_cards_deck") || "全部";
+let modeFilter = localStorage.getItem("law_cards_mode") || "全部";
 let queue = [], idx = 0, flipped = false, sessionTotal = 0;
 
 const $ = id => document.getElementById(id);
 const decks = ["全部", ...new Set(CARDS.map(c => c.deck))];
 if(!decks.includes(deckFilter)) deckFilter = "全部";
+const modes = ["全部", "申論", "選擇"];
+if(!modes.includes(modeFilter)) modeFilter = "全部";
 
 function renderDecks(){
   $("decks").innerHTML = decks.map(d =>
-    `<button class="chip ${d===deckFilter?'on':''}" data-d="${d}">${d}</button>`).join("");
-  document.querySelectorAll(".chip").forEach(b => b.onclick = () => {
+    `<button class="chip deck ${d===deckFilter?'on':''}" data-d="${d}">${d}</button>`).join("");
+  document.querySelectorAll("#decks .chip").forEach(b => b.onclick = () => {
     deckFilter = b.dataset.d; localStorage.setItem("law_cards_deck", deckFilter);
     renderDecks(); startSession();
   });
 }
-function pool(){ return CARDS.filter(c => deckFilter==="全部" || c.deck===deckFilter); }
+function renderModes(){
+  const label = {"全部":"全部卡","申論":"✍️ 申論卡","選擇":"☑️ 選擇卡"};
+  $("modes").innerHTML = modes.map(m =>
+    `<button class="chip mode ${m===modeFilter?'on':''}" data-m="${m}">${label[m]}</button>`).join("");
+  document.querySelectorAll("#modes .chip").forEach(b => b.onclick = () => {
+    modeFilter = b.dataset.m; localStorage.setItem("law_cards_mode", modeFilter);
+    renderModes(); startSession();
+  });
+}
+function inMode(c){
+  if(modeFilter==="全部") return true;
+  if(modeFilter==="申論") return c.mode==="申論" || c.mode==="通用";
+  if(modeFilter==="選擇") return c.mode==="選擇" || c.mode==="通用";
+  return true;
+}
+function pool(){ return CARDS.filter(c => (deckFilter==="全部" || c.deck===deckFilter) && inMode(c)); }
 function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 
 function startSession(){
@@ -331,7 +413,7 @@ function startSession(){
 function show(){
   if(idx >= queue.length){ finish(); return; }
   const c = queue[idx]; flipped = false;
-  $("badge").textContent = c.sub && c.sub !== c.deck ? c.deck + "·" + c.sub : c.deck;
+  $("badge").textContent = c.deck + "·" + (c.ctype || c.sub || "");
   $("front-text").innerHTML = c.front;
   $("front-text").style.display = "block";
   $("front-text").classList.remove("small");
@@ -383,14 +465,18 @@ document.addEventListener("keydown", e => {
   if(e.key === "1") grade(false);
   if(e.key === "2") grade(true);
 });
-renderDecks(); startSession();
+renderDecks(); renderModes(); startSession();
 </script>
 </body>
 </html>"""
 
-cards = parse_sanfa() + parse_tax() + parse_audit() + parse_audit_lists()
+cards = (parse_sanfa() + parse_tax() + parse_audit() + parse_audit_lists()
+         + parse_essay(os.path.join("稅務法規", "30_稅務_申論卡.md"), "稅務")
+         + parse_essay(os.path.join("三法", "30_三法_申論卡.md"), "三法")
+         + parse_essay(os.path.join("審計學", "30_審計_申論卡.md"), "審計"))
+cards = [classify(c) for c in cards]
 for c in cards:
-    c["id"] = f'{c["deck"]}|{re.sub(r"<[^>]+>", "", c["front"])[:30]}'
+    c["id"] = f'{c["deck"]}|{c.get("ctype","")}|{re.sub(r"<[^>]+>", "", c["front"])[:30]}'
 html_out = TEMPLATE.replace("__CARDS__", json.dumps(cards, ensure_ascii=False))
 open(OUT, "w", encoding="utf-8").write(html_out)
 by = {}
