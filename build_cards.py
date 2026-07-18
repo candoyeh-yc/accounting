@@ -65,6 +65,7 @@ def parse_tax():
     text = open(os.path.join(ROOT, "稅務法規", "10_稅務_現行數字速查表.md"), encoding="utf-8").read()
     cards, head, subhead = [], "", ""
     skip = False
+    recap = False   # 記憶鉤／對照類歸納區塊：內容重覆逐項卡，不生卡（避免重複題）
     for line in text.splitlines():
         s = line.strip()
         if s.startswith("## "):
@@ -72,12 +73,18 @@ def parse_tax():
             head = re.sub(r"（.*?）", "", head).strip()
             skip = any(k in s for k in TAX_SKIP_HEAD)
             subhead = ""
+            recap = False
             continue
         if s.startswith("### "):
             subhead = re.sub(r"[⚠✅★].*$", "", s.lstrip("#").strip()).strip()
             subhead = re.sub(r"（.*?）", "", subhead).strip()
+            recap = ("對照" in s) or ("記憶" in s)   # 如「級距對照（門檻減半記憶法）」→ 不生卡
             continue
-        if skip or s.startswith(">"): continue
+        # 「**記憶鉤：**」「記憶法」等歸納標記行 → 其後條列到下個標題前都是重覆歸納，不生卡
+        if "記憶鉤" in s or "記憶法" in s:
+            recap = True
+            continue
+        if skip or recap or s.startswith(">"): continue
         ctx = subhead or head
         # 表格列
         if s.startswith("|"):

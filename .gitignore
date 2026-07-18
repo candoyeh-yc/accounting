@@ -13,3 +13,7 @@
 # Word 暫存鎖檔
 ~$*
 .~lock.*
+
+# Python 快取
+__pycache__/
+*.pyc
