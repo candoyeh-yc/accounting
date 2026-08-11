@@ -181,9 +181,14 @@ def parse_audit():
     flush()
     return cards
 
-# ---------- 審計（列舉程序 00d）----------
+# ---------- 審計（列舉程序＝合併卡 B 區）----------
 def parse_audit_lists():
-    text = open(os.path.join(ROOT, "審計學", "00d_審計學_程序列舉彙整.md"), encoding="utf-8").read()
+    text = open(os.path.join(ROOT, "審計學", "00c_審計學_口訣與列舉程序卡.md"), encoding="utf-8").read()
+    # 只取 B 區「列舉程序」；A 區口訣由 parse_audit 處理、C 區流程處置不轉字卡
+    if "# B 區" in text:
+        text = text.split("# B 區", 1)[1]
+    if "# C 區" in text:
+        text = text.split("# C 區", 1)[0]
     cards = []
     title, law, body = None, "", []
     def flush():
