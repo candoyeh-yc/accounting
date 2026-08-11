@@ -5,7 +5,7 @@
 來源（SSOT，改 md 重跑即同步）：
   三法：三法/10_三法_法條速記表.md（含助記欄）
   稅務：稅務法規/10_稅務_現行數字速查表.md（自動克漏字：粗體數字遮成？）
-  審計：審計學/00c_審計學_記憶口訣卡.md（口訣默寫）＋00d_審計學_程序列舉彙整.md（列舉程序默寫）
+  審計：審計學/00c_審計學_口訣與列舉程序卡.md 的 A 區（口訣默寫）
 """
 import os, re, json, html
 
@@ -140,7 +140,10 @@ def parse_tax():
 
 # ---------- 審計（口訣卡）----------
 def parse_audit():
-    text = open(os.path.join(ROOT, "審計學", "00c_審計學_記憶口訣卡.md"), encoding="utf-8").read()
+    text = open(os.path.join(ROOT, "審計學", "00c_審計學_口訣與列舉程序卡.md"), encoding="utf-8").read()
+    # 只取 A 區「記憶口訣」做字卡；B 區列舉程序、C 區流程處置不轉字卡
+    if "# B 區" in text:
+        text = text.split("# B 區", 1)[0]
     cards = []
     section_title, code, body = None, "", []
     def flush():
