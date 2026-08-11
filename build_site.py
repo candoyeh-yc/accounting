@@ -15,7 +15,7 @@ MARKED_PATH = os.path.join(ROOT, "marked.min.js")  # 內嵌（repo 內，離線�
 NAV_OVERRIDE = {
     "00_審計學_考點地圖": "考點頻率地圖",
     "00a_審計學_查核流程全景圖": "查核流程全景圖",
-    "00b_審計學_核心速覽_先讀這張": "核心速覽卡",
+    "00b_審計學_核心速覽_先讀這張": "審計 核心速覽（申論骨架）",
     "00c_審計學_口訣與列舉程序卡": "審計 口訣×列舉×流程",
     "00e_審計學_必背定義卡": "審計 必背定義卡",
     "05_三法_必背答題範本": "三法 必背答題範本",
@@ -39,12 +39,19 @@ GROUPS = [
 
 # 考前衝刺區：這幾張抽到最上面單獨一區（按此順序），且不重複出現在原科目組
 SPRINT = [
+    "00b_審計學_核心速覽_先讀這張",
     "00c_審計學_口訣與列舉程序卡",
     "00e_審計學_必背定義卡",
     "05_三法_必背答題範本",
     "11_稅務_深掘_計算題解題範本",
     "10_稅務_現行數字速查表",
 ]
+
+# 藏幕後：不列入 index 側邊欄。30 申論卡仍由 build_cards.py 讀生字卡；21 錯題彙整為寫回目標，保留檔案
+HIDDEN = {
+    "30_審計_申論卡", "30_三法_申論卡", "30_稅務_申論卡",
+    "21_審計_錯題彙整", "21_三法_錯題彙整", "21_稅務_錯題彙整",
+}
 
 def first_h1(text):
     for line in text.splitlines():
@@ -66,10 +73,12 @@ def collect():
         files.sort()
         items = []
         for f in files:
+            doc_id = f[:-3]  # 去 .md
+            if doc_id in HIDDEN:
+                continue  # 藏幕後，不進 index 側邊欄
             path = os.path.join(d, f)
             with open(path, "r", encoding="utf-8") as fh:
                 content = fh.read()
-            doc_id = f[:-3]  # 去 .md
             h1 = first_h1(content) or doc_id
             nav = NAV_OVERRIDE.get(doc_id, h1.split("｜")[-1].strip())
             docs[doc_id] = base64.b64encode(content.encode("utf-8")).decode("ascii")
