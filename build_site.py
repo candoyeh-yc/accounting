@@ -16,7 +16,9 @@ NAV_OVERRIDE = {
     "00_審計學_考點地圖": "考點頻率地圖",
     "00a_審計學_查核流程全景圖": "查核流程全景圖",
     "00b_審計學_核心速覽_先讀這張": "核心速覽卡",
-    "00c_審計學_記憶口訣卡": "記憶口訣卡",
+    "00c_審計學_口訣與列舉程序卡": "審計 口訣×列舉×流程",
+    "00e_審計學_必背定義卡": "審計 必背定義卡",
+    "05_三法_必背答題範本": "三法 必背答題範本",
     "03_三法_深掘_證券交易法": "證券交易法★★★",
     "04_三法_深掘_商業會計法": "商業會計法★★★",
     "10_稅務_現行數字速查表": "現行數字速查表",
@@ -34,6 +36,13 @@ GROUPS = [
     ("稅務法規", "💰 稅務法規", "稅務法規"),
 ]
 
+# 考前衝刺區：這幾張抽到最上面單獨一區（按此順序），且不重複出現在原科目組
+SPRINT = [
+    "00c_審計學_口訣與列舉程序卡",
+    "00e_審計學_必背定義卡",
+    "05_三法_必背答題範本",
+]
+
 def first_h1(text):
     for line in text.splitlines():
         s = line.strip()
@@ -44,6 +53,7 @@ def first_h1(text):
 def collect():
     groups = []
     docs = {}
+    sprint = {}  # doc_id -> item（收進衝刺區，不放原科目組）
     for folder, label, _ in GROUPS:
         d = os.path.join(ROOT, folder) if folder else ROOT
         if not os.path.isdir(d):
@@ -60,9 +70,17 @@ def collect():
             h1 = first_h1(content) or doc_id
             nav = NAV_OVERRIDE.get(doc_id, h1.split("｜")[-1].strip())
             docs[doc_id] = base64.b64encode(content.encode("utf-8")).decode("ascii")
-            items.append({"id": doc_id, "nav": nav, "title": h1})
+            item = {"id": doc_id, "nav": nav, "title": h1}
+            if doc_id in SPRINT:
+                sprint[doc_id] = item
+            else:
+                items.append(item)
         if items:
             groups.append({"label": label, "items": items})
+    # 衝刺區置頂（按 SPRINT 指定順序）
+    sprint_items = [sprint[i] for i in SPRINT if i in sprint]
+    if sprint_items:
+        groups.insert(0, {"label": "🔥 考前衝刺（背這幾張）", "items": sprint_items})
     return groups, docs
 
 def build_nav(groups):
